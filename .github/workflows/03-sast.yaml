@@ -1,4 +1,4 @@
-name: 02-sast
+name: 03-sast
 
 on:
   pull_request:
