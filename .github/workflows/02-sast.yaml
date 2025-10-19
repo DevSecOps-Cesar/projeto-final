@@ -73,7 +73,7 @@ jobs:
 
       - name: Export SonarQube findings to SARIF
         env:
-          SONAR_USER_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_USER_TOKEN: ${{ secrets.SONAR_USER_TOKEN }}
           SONAR_HOST_URL: http://sonarqube-sonarqube.sonarqube:9000
           SONAR_PROJECT_KEY: app
         run: |
