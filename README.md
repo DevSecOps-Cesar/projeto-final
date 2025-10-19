@@ -1,6 +1,6 @@
 # Projeto Final de DevSecOps
 
-Esse repositório usa o [OWASP WebGoat](https://github.com/WebGoat/WebGoat#) como serviço "real" a ser testado.
+Esse repositório usa o [OWASP brokencrystals](https://github.com/NeuraLegion/brokencrystals#) como serviço "real" a ser testado.
 
 ## Table of Contents
 

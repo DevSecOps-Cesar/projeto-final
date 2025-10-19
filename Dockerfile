@@ -1,40 +1,59 @@
-# We need JDK as some of the lessons needs to be able to compile Java code
-FROM docker.io/eclipse-temurin:25-jdk-noble
+###################
+# BUILD FOR LOCAL DEVELOPMENT
+###################
 
-LABEL name="WebGoat: A deliberately insecure Web Application"
-LABEL maintainer="WebGoat team"
+FROM node:18-alpine AS build
 
-RUN \
-  useradd -ms /bin/bash webgoat && \
-  chgrp -R 0 /home/webgoat && \
-  chmod -R g=u /home/webgoat
+WORKDIR /usr/src/app
 
-USER webgoat
+# Copy and build NestJS server project
+COPY --chown=node:node package*.json ./
+COPY --chown=node:node tsconfig.build.json ./
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node nest-cli.fast.json ./
+COPY --chown=node:node .env ./
+COPY --chown=node:node config ./config
+COPY --chown=node:node keycloak ./keycloak
+COPY --chown=node:node src ./src
 
-COPY --chown=webgoat target/webgoat-*.jar /home/webgoat/webgoat.jar
+ENV NPM_CONFIG_LOGLEVEL=error
+RUN npm ci --no-audit
+RUN npm run build:fast
+RUN npm prune --production
 
-EXPOSE 8080
-EXPOSE 9090
+# Copy and build client project
+COPY --chown=node:node client/package*.json ./client/
+COPY --chown=node:node client/src ./client/src
+COPY --chown=node:node client/public ./client/public
+COPY --chown=node:node client/typings ./client/typings
+COPY --chown=node:node client/vcs ./client/vcs
+COPY --chown=node:node client/tsconfig.json ./client/tsconfig.json
+COPY --chown=node:node client/vite.config.ts ./client/vite.config.ts
+COPY --chown=node:node client/index.html ./client/index.html
 
-ENV TZ=Europe/Amsterdam
+ENV CYPRESS_INSTALL_BINARY=0
+RUN npm ci --prefix=client --no-audit
+RUN npm run build --prefix=client
 
-WORKDIR /home/webgoat
-ENTRYPOINT [ "java", \
-   "-Duser.home=/home/webgoat", \
-   "-Dfile.encoding=UTF-8", \
-   "--add-opens", "java.base/java.lang=ALL-UNNAMED", \
-   "--add-opens", "java.base/java.util=ALL-UNNAMED", \
-   "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED", \
-   "--add-opens", "java.base/java.text=ALL-UNNAMED", \
-   "--add-opens", "java.desktop/java.beans=ALL-UNNAMED", \
-   "--add-opens", "java.desktop/java.awt.font=ALL-UNNAMED", \
-   "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", \
-   "--add-opens", "java.base/java.io=ALL-UNNAMED", \
-   "--add-opens", "java.base/java.util=ALL-UNNAMED", \
-   "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED", \
-   "--add-opens", "java.base/java.io=ALL-UNNAMED", \
-   "-Drunning.in.docker=true", \
-   "-jar", "webgoat.jar", "--server.address", "0.0.0.0" ]
+USER node
 
-HEALTHCHECK --interval=5s --timeout=3s \
-  CMD curl --fail http://localhost:8080/WebGoat/actuator/health || exit 1
+###################
+# PRODUCTION
+###################
+
+FROM node:18-alpine AS production
+
+WORKDIR /usr/src/app
+
+COPY --chown=node:node .env ./
+COPY --chown=node:node config ./config
+COPY --chown=node:node keycloak ./keycloak
+
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/package*.json ./
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+COPY --chown=node:node --from=build /usr/src/app/client/dist ./client/dist
+COPY --chown=node:node --from=build /usr/src/app/client/vcs ./client/vcs
+
+CMD ["npm", "run", "start:prod"]
