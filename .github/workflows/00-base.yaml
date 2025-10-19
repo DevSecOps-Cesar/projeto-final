@@ -1,5 +1,5 @@
 # Workflow name displayed in GitHub Actions UI
-name: project-workflows
+name: base
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true  # Cancel previous runs in the same group
 
 jobs:
-  debug:
+  checkout:
     # Dynamic job name based on matrix value
     name: Debug - ${{ matrix.test }}
 
