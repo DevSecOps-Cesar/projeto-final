@@ -48,7 +48,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: http://sonarqube-sonarqube.sonarqube:9000
-          SONAR_PROJECT_KEY: src
+          SONAR_PROJECT_KEY: app
         run: |
           sleep 10
           STATUS=$(curl -s -u ${SONAR_TOKEN}: -G \
@@ -80,7 +80,7 @@ jobs:
         env:
           SONAR_USER_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: http://sonarqube-sonarqube.sonarqube:9000
-          SONAR_PROJECT_KEY: src
+          SONAR_PROJECT_KEY: app
         run: |
           sonar-findings-export \
             -u ${SONAR_HOST_URL} \
