@@ -68,6 +68,11 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc g++ python3-dev
+
       - name: Install sonar-tools
         run: pip install sonar-tools
 
